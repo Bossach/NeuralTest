@@ -24,10 +24,22 @@ public class Eval {
             }
 
             Expression parse() {
+                if ( str.trim().length() == 0 ) throw new RuntimeException("EMPTY FUNCTION");
+                bracketsCheck();
                 nextChar();
                 Expression x = parseExpression();
                 if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char) ch);
                 return x;
+            }
+
+            void bracketsCheck() {
+                int bracketCounter = 0;
+                for (int i = 0; i < str.length(); i++) {
+                    if ( str.charAt(i) == '(' ) bracketCounter++;
+                    if ( str.charAt(i) == ')' ) bracketCounter--;
+                    if ( bracketCounter < 0 ) throw new RuntimeException("INVALID BRACKETS ORDER and/or COUNT");
+                }
+                if ( bracketCounter != 0 ) throw new RuntimeException("INVALID BRACKETS COUNT");
             }
 
             // Grammar:
@@ -77,8 +89,10 @@ public class Eval {
                 Expression x;
                 int startPos = this.pos;
                 if (eat('(')) { // parentheses
-                    x = parseExpression();
-                    eat(')');
+                    if ( !eat(')') ) {
+                        x = parseExpression();
+                        eat(')');
+                    } else throw new RuntimeException("EMPTY BRACKETS EXCEPTION");
                 } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
                     while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
                     double y = Double.parseDouble(str.substring(startPos, this.pos));

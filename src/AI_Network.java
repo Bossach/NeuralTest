@@ -22,14 +22,14 @@ public class AI_Network {
         if ( network_weights.length > 0 )
             this.inputSize = network_weights[0][0].length;
 
-        this.actFunctionStr = funcString;
+        this.actFunctionStr = funcString.trim();
         Map<String, Double> params = new HashMap<String, Double>();
         params.put("x", 0d);
         Expression tempFuncExp;
         try {
-            tempFuncExp = Eval.getEval(funcString, params);
+            tempFuncExp = Eval.getEval( this.actFunctionStr , params );
         } catch (RuntimeException e) {
-            System.err.println("ILLEGAL ACTIVATION FUNCTION, USING DEFAULT: " + defaultFunction + ";");
+            System.err.println("ILLEGAL ACTIVATION FUNCTION, (" + e + ") USING DEFAULT: " + defaultFunction + ";");
             tempFuncExp = Eval.getEval(defaultFunction, params);
             this.actFunctionStr = defaultFunction;
         }
@@ -103,7 +103,7 @@ public class AI_Network {
     }
 
     public String toString() {
-        return "{" + this.actFunctionStr.replaceAll(" ", "") + "}" + Arrays.deepToString( getWeights() );
+        return "{" + this.actFunctionStr + "}" + Arrays.deepToString( getWeights() );
     }
 }
 
