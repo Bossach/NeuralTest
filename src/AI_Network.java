@@ -25,10 +25,18 @@ public class AI_Network {
         this.actFunctionStr = funcString;
         Map<String, Double> params = new HashMap<String, Double>();
         params.put("x", 0d);
-        Expression eval = Eval.getEval(funcString, params);
+        Expression tempFuncExp;
+        try {
+            tempFuncExp = Eval.getEval(funcString, params);
+        } catch (RuntimeException e) {
+            System.err.println("ILLEGAL ACTIVATION FUNCTION, USING DEFAULT: " + defaultFunction + ";");
+            tempFuncExp = Eval.getEval(defaultFunction, params);
+            this.actFunctionStr = defaultFunction;
+        }
+        Expression funcExpr = tempFuncExp;
         this.actFunction = (x) -> {
             params.replace("x", x);
-            return eval.eval();
+            return funcExpr.eval();
         };
 
         this.layers = new Layer[network_weights.length];
