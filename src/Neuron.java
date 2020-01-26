@@ -16,7 +16,7 @@ public class Neuron {
 
     public Neuron( double[] weights , ActFunction func ) {
         this.weights = weights.clone();
-        this.neuron_ID = this.counter++;
+        this.neuron_ID = counter++;
         this.actFunction = func;
     }
 
@@ -61,10 +61,6 @@ public class Neuron {
         this.cachedRes = res;
         this.cached = true;
         return res;
-    }
-
-    private static double actFunc( double x ) {
-        return 1 / ( 1 + Math.exp( -x ) );
     }
 
     public Neuron clone() {

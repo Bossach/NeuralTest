@@ -36,7 +36,7 @@ public class AI_Network {
             this.layers[i] = new Layer( network_weights[i] , this.actFunction );
         }
 
-        this.Network_ID = this.counter++;
+        this.Network_ID = counter++;
     }
 
     public AI_Network(int[] layerSizes , String funcString ) {

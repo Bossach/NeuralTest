@@ -18,7 +18,7 @@ public class Layer {
         for (int i = 0; i < this.size; i++) {
             this.neurons[i] = new Neuron( weights[i] , func );
         }
-        this.layer_ID = this.counter++;
+        this.layer_ID = counter++;
     }
 
     public void mutate( double k ) {
