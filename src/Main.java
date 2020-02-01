@@ -6,6 +6,34 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
+        List<String> params = new ArrayList<>();
+        params.add("x");
+        Eval eval = new Eval("x", params);
+        Scanner scan = new Scanner(System.in);
+        for (;;) {
+            try {
+                eval.setVariable("x", scan.nextDouble());
+                System.out.println("Result ( " + eval.getSource() + " )(x= " + eval.getVariable("x") + " ): " + eval.eval());
+            } catch (Exception e) {
+
+                String newExpr = scan.nextLine();
+                if (newExpr.trim().equals("")) continue;
+                if (newExpr.equals("exit")) {
+                    scan.close();
+                    return;
+                }
+
+                try {
+                    eval = new Eval(newExpr, params);
+                    System.out.println("Func changed to (" + eval.getSource() + ").");                   
+                } catch (Exception ee) {
+                    System.out.println("Error: " + ee);
+                }
+            }
+        }
+    }
+
+    public static void mainx(String[] args) {
 
         int inputs = 1;
 
@@ -19,11 +47,11 @@ public class Main {
 
 
 
-        NeuralNetworkTrainable netw = new NeuralNetworkTrainable(new int[]{inputs, 20, 20, 16, 10, outputs});
+        NeuralNetworkTrainable netw = new NeuralNetworkTrainable(new int[]{inputs, 2, outputs});
 
 
         long starttime = System.currentTimeMillis();
-        netw.multTrain(array , 30000000, 0.3);
+        netw.multTrain(array , 300000, 0.3);
         long endtime = System.currentTimeMillis();
 
         System.out.println("Обучение окончено. Времени затрачено: " + (endtime - starttime));

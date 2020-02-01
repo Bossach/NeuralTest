@@ -1,12 +1,46 @@
 package NeuralNetwork;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class Eval {
+public class Eval implements Expression {
+    private String source;
+    private Expression expr;
+    private Map<String, Double> variables = new HashMap<String, Double>();
 
-    public static Expression getEval(final String str, Map<String, Double> variables) {
+    public Eval(String source, List<String> variableNames) {
+        this.source = source;
+        for (String variableName : variableNames) {
+            this.variables.put(variableName, 0d);
+        }
+        expr = Eval.parseExpresion(source, this.variables);
+    }
+
+    public boolean setVariable(String varname, double value) {
+        if (!this.variables.containsKey(varname)) {
+            return false;
+        }
+        this.variables.replace(varname, value);
+        return true;
+    }
+
+    public double getVariable(String varname) {
+        return this.variables.get(varname);
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public double eval() {
+        return expr.eval();
+    }
+
+    private static Expression parseExpresion(final String str, final Map<String, Double> variables) {
         return new Object() {
             int pos = -1, ch;
+            String probableExceptionReason = "";
 
             void nextChar() {
                 ch = (++pos < str.length()) ? str.charAt(pos) : -1;
@@ -22,51 +56,92 @@ public class Eval {
             }
 
             Expression parse() {
-                if (str.trim().length() == 0) throw new RuntimeException("EMPTY FUNCTION");
+                if (str.trim().length() == 0) throw new RuntimeException("EMPTY EXPRESSION");
 
                 nextChar();
-                Expression x = parseExpression();
-                if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char) ch);
+                Expression x = parseConds();
+                if (pos < str.length()) throw new RuntimeException("Unexpected: '" + (char) ch + "' " + this.probableExceptionReason);
                 return x;
             }
 
             // Grammar:
-            // expression = term | expression `+` term | expression `-` term
-            // term = factor | term `*` factor | term `/` factor
-            // factor = `+` factor | `-` factor | `(` expression `)`
-            //        | number | functionName factor | factor `^` factor
+            // condits = comps `?` condits `:` condits
+            // comps = plusminus | plusminus `>` plusminus | plusminus `<` plusminus | plusminus `=` plusminus | plusminus `==` plusminus
+            // plusminus = muldiv | muldiv `+` plusminus | muldiv `-` plusminus
+            // muldiv = numpowfnc | muldiv `*` numpowfnc | muldiv `/` numpowfnc
+            // numpowfnc = `+` numpowfnc | `-` numpowfnc | `(` condits `)` | number | functionName `(` condits `)` | numpowfnc `^` numpowfnc | var
 
-            Expression parseExpression() {
-                Expression x = parseTerm();
-                for (; ; ) {
-                    if (eat('+')) {
-                        Expression a = x, b = parseTerm();
-                        x = () -> a.eval() + b.eval(); // addition
-                    } else if (eat('-')) {
-                        // x = a + b
-                        Expression a = x, b = parseTerm();
-                        x = () -> a.eval() - b.eval(); // subtraction
-                    } else return x;
-                }
+            Expression parseConds() {
+                Expression x = parseComps();
+                if (eat('?')) {
+                    Expression a = x, b = parseConds(), c;
+                    if (!eat(':')) throw new RuntimeException("EXCEPT ':'");
+                    c = parseConds();
+                    x = () -> a.eval() != 0 ? b.eval() : c.eval();
+                } 
+                return x;
             }
 
-            Expression parseTerm() {
-                Expression x = parseFactor();
-                for (; ; ) {
-                    if (eat('*')) {
-                        Expression a = x, b = parseFactor();
-                        x = () -> a.eval() * b.eval(); // multiplication
-                    } else if (eat('/')) {
-                        Expression a = x, b = parseFactor();
-                        x = () -> a.eval() / b.eval(); // division
-                    } else return x;
+            Expression parseComps() {
+                Expression x = parsePlusMinus();
+                if (eat('>')) {
+                    boolean strict = !eat('=');
+                    Expression a = x, b = parsePlusMinus();
+                    if (strict) {
+                        x = () -> a.eval() > b.eval() ? 1 : 0;
+                    } else {
+                        x = () -> a.eval() >= b.eval() ? 1 : 0;
+                    }
+                } else if (eat('<')) {
+                    boolean strict = !eat('=');
+                    Expression a = x, b = parsePlusMinus();
+                    if (strict) {
+                        x = () -> a.eval() < b.eval() ? 1 : 0;
+                    } else {
+                        x = () -> a.eval() <= b.eval() ? 1 : 0;
+                    }
+                } else if (eat('=')) {
+                    boolean boolcomp = eat('=');
+                    Expression a = x, b = parsePlusMinus();
+                    if (boolcomp) { // `==` - boolean comp
+                        x = () -> (a.eval() != 0) == (b.eval() != 0) ? 1 : 0;
+                    } else { // `=` - num comp
+                        x = () -> a.eval() == b.eval() ? 1 : 0;
+                    }
                 }
+                if (eat('>') || eat('<') || eat('=')) 
+                    this.probableExceptionReason = " probably because multiple '>' '<' '=' and '==' need explicit '( ... )' prioritize";
+                return x;
             }
 
-            Expression parseFactor() {
-                if (eat('+')) return parseFactor(); // unary plus
+            Expression parsePlusMinus() {
+                Expression x = parseMulDiv();
+                if (eat('+')) {
+                    Expression a = x, b = parsePlusMinus();
+                    x = () -> a.eval() + b.eval(); // addition
+                } else if (eat('-')) {
+                    Expression a = x, b = parsePlusMinus();
+                    x = () -> a.eval() - b.eval(); // subtraction
+                } 
+                return x;
+            }
+
+            Expression parseMulDiv() {
+                Expression x = parseNumPowFnc();
+                if (eat('*')) {
+                    Expression a = x, b = parseMulDiv();
+                    x = () -> a.eval() * b.eval(); // multiplication
+                } else if (eat('/')) {
+                    Expression a = x, b = parseMulDiv();
+                    x = () -> a.eval() / b.eval(); // division
+                } 
+                return x;
+            }
+
+            Expression parseNumPowFnc() {
+                if (eat('+')) return parseNumPowFnc(); // unary plus
                 if (eat('-')) {
-                    Expression a = parseFactor(); // unary minus
+                    Expression a = parseNumPowFnc(); // unary minus
                     return () -> -a.eval();
                 }
 
@@ -74,7 +149,7 @@ public class Eval {
                 int startPos = this.pos;
                 if (eat('(')) { // parentheses
                     if (!eat(')')) {
-                        x = parseExpression();
+                        x = parseConds();
                         if (!eat(')')) throw new RuntimeException("BRACKETS NOT CLOSED");
                     } else throw new RuntimeException("EMPTY BRACKETS EXCEPTION");
                 } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
@@ -89,7 +164,7 @@ public class Eval {
                     } else {
                         if (!eat('(')) throw new RuntimeException("FUNCTION " + func + " '(' expected");
                         if (!eat(')')) {
-                            x = parseExpression();
+                            x = parseConds();
                             if (!eat(')')) throw new RuntimeException("BRACKETS NOT CLOSED");
                         } else throw new RuntimeException("EMPTY BRACKETS EXCEPTION");
                         Expression a = x;
@@ -101,11 +176,11 @@ public class Eval {
                         else throw new RuntimeException("Unknown function: " + func);
                     }
                 } else {
-                    throw new RuntimeException("Unexpected: " + (char) ch);
+                    throw new RuntimeException("Unexpected: '" + (char) ch + "' " + this.probableExceptionReason);
                 }
 
                 if (eat('^')) {
-                    Expression a = x, b = parseFactor();
+                    Expression a = x, b = parseNumPowFnc();
                     x = () -> Math.pow(a.eval(), b.eval()); // exponentiation
                 }
 

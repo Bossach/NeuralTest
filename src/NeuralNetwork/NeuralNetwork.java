@@ -1,7 +1,7 @@
 package NeuralNetwork;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NeuralNetwork {
     protected static final String defaultFunctionStr = "1 / ( 1 + exp( -x ) )";
@@ -19,19 +19,21 @@ public class NeuralNetwork {
         weights = networkWeights.clone();
         //обрабатываем и присваиваем функцию активации
         this.actFunctionStr = funcString.replaceAll(" ", "");
-        Map<String, Double> params = new HashMap<String, Double>();
-        params.put("x", 0d);
-        Expression tempFuncExp;
+
+        List<String> params = new ArrayList<String>();
+        params.add("x");
+
+        Eval tempFuncExp;
         try {
-            tempFuncExp = Eval.getEval(this.actFunctionStr, params);
+            tempFuncExp = new Eval(this.actFunctionStr, params);
         } catch (RuntimeException e) {
             System.err.println("ILLEGAL ACTIVATION FUNCTION, (" + e + ") USING DEFAULT: " + defaultFunctionStr + ";");
-            tempFuncExp = Eval.getEval(defaultFunctionStr, params);
+            tempFuncExp = new Eval(defaultFunctionStr, params);
             this.actFunctionStr = defaultFunctionStr;
         }
-        Expression funcExpr = tempFuncExp;
+        Eval funcExpr = tempFuncExp;
         this.actFunction = (x) -> {
-            params.replace("x", x);
+            funcExpr.setVariable("x", x);
             return funcExpr.eval();
         };
         //
