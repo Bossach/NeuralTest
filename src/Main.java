@@ -34,11 +34,23 @@ public class Main {
             try {
                 System.out.println(Arrays.toString(netw.process(new double[]{scan.nextDouble()})));
             } catch (Exception e) {
-                System.err.println("error");
-                scan.nextLine();
+                String cmd = scan.nextLine().toLowerCase();
+                if (cmd.startsWith("save ")) {
+                    save(netw.export(), cmd.replaceFirst("save ", ""));
+                } else if (cmd.startsWith("load ")) {
+                    try {
+                        netw = new NeuralNetworkTrainable( (NetworkData) load(cmd.replaceFirst("load ", "")) );
+                    } catch (Exception ee) {
+                        System.out.println("Error loading network: " + ee);
+                    }
+                } else if (cmd.equals("exit")) {
+                    scan.close();
+                    return;
+                } else {
+                    System.out.println("Unknown cmd '" + cmd + "'");
+                }
             }
         }
-
 
     }
 
@@ -53,7 +65,9 @@ public class Main {
     private static Object load(String filename) throws Exception {
         final FileInputStream fis = new FileInputStream(filename);
         final ObjectInputStream ois = new ObjectInputStream(fis);
-        return ois.readObject();
+        Object ret = ois.readObject();
+        ois.close();
+        return ret;
     }
 
 }
