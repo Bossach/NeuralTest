@@ -1,8 +1,6 @@
-import java.util.Map;
+package NeuralNetwork;
 
-interface Expression {
-    double eval();
-}
+import java.util.Map;
 
 public class Eval {
 
@@ -24,22 +22,12 @@ public class Eval {
             }
 
             Expression parse() {
-                if ( str.trim().length() == 0 ) throw new RuntimeException("EMPTY FUNCTION");
-                bracketsCheck();
+                if (str.trim().length() == 0) throw new RuntimeException("EMPTY FUNCTION");
+
                 nextChar();
                 Expression x = parseExpression();
                 if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char) ch);
                 return x;
-            }
-
-            void bracketsCheck() {
-                int bracketCounter = 0;
-                for (int i = 0; i < str.length(); i++) {
-                    if ( str.charAt(i) == '(' ) bracketCounter++;
-                    if ( str.charAt(i) == ')' ) bracketCounter--;
-                    if ( bracketCounter < 0 ) throw new RuntimeException("INVALID BRACKETS ORDER and/or COUNT");
-                }
-                if ( bracketCounter != 0 ) throw new RuntimeException("INVALID BRACKETS COUNT");
             }
 
             // Grammar:
@@ -54,13 +42,11 @@ public class Eval {
                     if (eat('+')) {
                         Expression a = x, b = parseTerm();
                         x = () -> a.eval() + b.eval(); // addition
-                    }
-                    else if (eat('-')) {
+                    } else if (eat('-')) {
                         // x = a + b
                         Expression a = x, b = parseTerm();
                         x = () -> a.eval() - b.eval(); // subtraction
-                    }
-                    else return x;
+                    } else return x;
                 }
             }
 
@@ -70,12 +56,10 @@ public class Eval {
                     if (eat('*')) {
                         Expression a = x, b = parseFactor();
                         x = () -> a.eval() * b.eval(); // multiplication
-                    }
-                    else if (eat('/')) {
+                    } else if (eat('/')) {
                         Expression a = x, b = parseFactor();
                         x = () -> a.eval() / b.eval(); // division
-                    }
-                    else return x;
+                    } else return x;
                 }
             }
 
@@ -89,9 +73,9 @@ public class Eval {
                 Expression x;
                 int startPos = this.pos;
                 if (eat('(')) { // parentheses
-                    if ( !eat(')') ) {
+                    if (!eat(')')) {
                         x = parseExpression();
-                        eat(')');
+                        if (!eat(')')) throw new RuntimeException("BRACKETS NOT CLOSED");
                     } else throw new RuntimeException("EMPTY BRACKETS EXCEPTION");
                 } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
                     while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
@@ -103,7 +87,11 @@ public class Eval {
                     if (variables.containsKey(func)) {
                         x = () -> variables.get(func);
                     } else {
-                        x = parseFactor();
+                        if (!eat('(')) throw new RuntimeException("FUNCTION " + func + " '(' expected");
+                        if (!eat(')')) {
+                            x = parseExpression();
+                            if (!eat(')')) throw new RuntimeException("BRACKETS NOT CLOSED");
+                        } else throw new RuntimeException("EMPTY BRACKETS EXCEPTION");
                         Expression a = x;
                         if (func.equals("sqrt")) x = () -> Math.sqrt(a.eval());
                         else if (func.equals("sin")) x = () -> Math.sin(Math.toRadians(a.eval()));
