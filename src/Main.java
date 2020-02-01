@@ -5,7 +5,7 @@ import java.util.*;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void mainx(String[] args) {
         List<String> params = new ArrayList<>();
         params.add("x");
         Eval eval = new Eval("x", params);
@@ -33,25 +33,27 @@ public class Main {
         }
     }
 
-    public static void mainx(String[] args) {
+    public static void main(String[] args) {
 
         int inputs = 1;
 
-        int outputs = 8;
+        int outputs = 1;
 
-        double[][][] array = new double[256][][];
+        double[][][] array = new double[200][][];
 
-        for (int i = 0; i < array.length; i++) {
-            array[i] = new double[][]{{i/1000}, {(i >> 7) % 2, (i >> 6) % 2, (i >> 5) % 2, (i >> 4) % 2, (i >> 3) % 2, (i >> 2) % 2, (i >> 1) % 2, i % 2}};
+        for (int i = 0; i < array.length; i += 2) {
+            array[i] = new double[][]{{i}, {i}};
+            array[i + 1] = new double[][]{{-i}, {i}};
+            System.out.println(i);
         }
 
 
 
-        NeuralNetworkTrainable netw = new NeuralNetworkTrainable(new int[]{inputs, 2, outputs});
+        NeuralNetworkTrainable netw = new NeuralNetworkTrainable(new int[]{inputs, 3, 3, outputs}, "1 / ( 1 + exp( -x ) )", "x*(1-x)");
 
 
         long starttime = System.currentTimeMillis();
-        netw.multTrain(array , 300000, 0.3);
+        netw.multTrain(array , 3000000, 0.1);
         long endtime = System.currentTimeMillis();
 
         System.out.println("Обучение окончено. Времени затрачено: " + (endtime - starttime));

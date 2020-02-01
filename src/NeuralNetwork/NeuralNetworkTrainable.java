@@ -1,22 +1,49 @@
 package NeuralNetwork;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public class NeuralNetworkTrainable extends NeuralNetwork {
     private static Random rand = new Random();
-    private ActFunction derFunc = x -> x * (1 - x); //FIXME ЗАХАРДКОЖЕННАЯ ПРОИЗВОДНАЯ
+    protected static final String defaultDerFunctionStr = "x*(1-x)";
+    private ActFunction derFunc; 
+    private String derFunctionStr;
 
-    public NeuralNetworkTrainable(double[][][] networkWeights, String funcString) {
+    public NeuralNetworkTrainable(double[][][] networkWeights, String funcString, String derFuncString) {
         super(networkWeights, funcString);
+        this.derFunctionStr = derFuncString.replaceAll(" ", "");
+        
+        List<String> params = new ArrayList<String>();
+        params.add("x");
+        
+        Eval tempFuncExp;
+        try {
+            tempFuncExp = new Eval(this.derFunctionStr, params);
+        } catch (RuntimeException e) {
+            System.err.println("ILLEGAL DERIVITIVE OF ACTIVATION FUNCTION, (" + e + ") USING DEFAULT: " + defaultDerFunctionStr + ";");
+            tempFuncExp = new Eval(defaultDerFunctionStr, params);
+        }
+    
+        if (this.actFunctionStr.equals(defaultFunctionStr)) {
+            tempFuncExp = new Eval(defaultDerFunctionStr, params);
+            this.derFunctionStr = defaultDerFunctionStr;
+        }
+
+        final Eval funcExpr = tempFuncExp;
+        this.derFunc = (x) -> {
+            funcExpr.setVariable("x", x);
+            return funcExpr.eval();
+        };
     }
 
-    public NeuralNetworkTrainable(int[] layerSizes, String funcString) {
-        this(generateRandomWeights(layerSizes), funcString);
+    public NeuralNetworkTrainable(int[] layerSizes, String funcString, String derFuncString) {
+        this(generateRandomWeights(layerSizes), funcString, derFuncString);
     }
 
     public NeuralNetworkTrainable(int[] layerSizes) {
-        this(layerSizes, defaultFunctionStr);
+        this(layerSizes, defaultFunctionStr, defaultDerFunctionStr);
     }
 
     public NeuralNetworkTrainable(NetworkData data) {
@@ -72,14 +99,14 @@ public class NeuralNetworkTrainable extends NeuralNetwork {
         int index = 0;
         //TODO Write checks
 
-        int percent = count/100;
+        int percent = count / 100;
 
 
         for (int i = 0; i < count; i++) {
             //index = ( index + 1 ) % trainData.length;
             index = rand.nextInt(trainData.length);
             train(trainData[index][0], trainData[index][1], k);
-            if ( i % percent == 0 ) System.out.println(i/percent + "% complete.");
+            if ( i % percent == 0 ) System.out.println(i / percent + "% complete.");
         }
 
 
