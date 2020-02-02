@@ -1,7 +1,5 @@
 package NeuralNetwork;
 
-// TODO Serializable derivitive function
-
 import java.io.Serializable;
 
 public class NetworkData implements Serializable {

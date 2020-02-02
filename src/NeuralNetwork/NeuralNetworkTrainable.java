@@ -1,49 +1,21 @@
 package NeuralNetwork;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 public class NeuralNetworkTrainable extends NeuralNetwork {
     private static Random rand = new Random();
-    protected static final String defaultDerFunctionStr = "x*(1-x)";
-    private ActFunction derFunc; 
-    private String derFunctionStr;
 
-    public NeuralNetworkTrainable(double[][][] networkWeights, String funcString, String derFuncString) {
+    public NeuralNetworkTrainable(double[][][] networkWeights, String funcString) {
         super(networkWeights, funcString);
-        this.derFunctionStr = derFuncString.replaceAll(" ", "");
-        
-        List<String> params = new ArrayList<String>();
-        params.add("x");
-        
-        Eval tempFuncExp;
-        try {
-            tempFuncExp = new Eval(this.derFunctionStr, params);
-        } catch (RuntimeException e) {
-            System.err.println("ILLEGAL DERIVITIVE OF ACTIVATION FUNCTION, (" + e + ") USING DEFAULT: " + defaultDerFunctionStr + ";");
-            tempFuncExp = new Eval(defaultDerFunctionStr, params);
-        }
-    
-        if (this.actFunctionStr.equals(defaultFunctionStr)) {
-            tempFuncExp = new Eval(defaultDerFunctionStr, params);
-            this.derFunctionStr = defaultDerFunctionStr;
-        }
-
-        final Eval funcExpr = tempFuncExp;
-        this.derFunc = (x) -> {
-            funcExpr.setVariable("x", x);
-            return funcExpr.eval();
-        };
     }
 
-    public NeuralNetworkTrainable(int[] layerSizes, String funcString, String derFuncString) {
-        this(generateRandomWeights(layerSizes), funcString, derFuncString);
+    public NeuralNetworkTrainable(int[] layerSizes, String funcString) {
+        this(generateRandomWeights(layerSizes), funcString);
     }
 
     public NeuralNetworkTrainable(int[] layerSizes) {
-        this(layerSizes, defaultFunctionStr, defaultDerFunctionStr);
+        this(layerSizes, defaultFunctionStr);
     }
 
     public NeuralNetworkTrainable(NetworkData data) {
@@ -118,14 +90,14 @@ public class NeuralNetworkTrainable extends NeuralNetwork {
         //first layer
         for (int neuron = 0; neuron < weights[0].length; neuron++) {    //пробегаем по нейронам "первого" слоя
             for (int w = 0; w < weights[0][neuron].length; w++) {       //по всем его связям ( == первоначальным входам)
-                weights[0][neuron][w] += k * neuronErrors[0][neuron] * derFunc.run(neuronOutputs[0][neuron]) * input[w];    //кол-во связей == кол-во элементов в input
+                weights[0][neuron][w] += k * neuronErrors[0][neuron] * actFunction.der(neuronOutputs[0][neuron]) * input[w];    //кол-во связей == кол-во элементов в input
             }
         }
         //other layers
         for (int layer = 1; layer < weights.length; layer++) {
             for (int neuron = 0; neuron < weights[layer].length; neuron++) {
                 for (int w = 0; w < weights[layer][neuron].length; w++) {
-                    weights[layer][neuron][w] += k * neuronErrors[layer][neuron] * derFunc.run(neuronOutputs[layer][neuron]) * neuronOutputs[layer - 1][w];
+                    weights[layer][neuron][w] += k * neuronErrors[layer][neuron] * actFunction.der(neuronOutputs[layer][neuron]) * neuronOutputs[layer - 1][w];
                 }
             }
         }

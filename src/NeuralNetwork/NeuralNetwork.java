@@ -32,10 +32,20 @@ public class NeuralNetwork {
             this.actFunctionStr = defaultFunctionStr;
         }
         Eval funcExpr = tempFuncExp;
-        this.actFunction = (x) -> {
-            funcExpr.setVariable("x", x);
-            return funcExpr.eval();
+        this.actFunction = new ActFunction() {
+            public double out(double x) {
+                funcExpr.setVariable("x", x);
+                return funcExpr.eval();
+            }
+            public double der(double x) {
+                funcExpr.setVariable("x", x);
+                return funcExpr.deriv();
+            }
         };
+        // (x) -> {
+        //     funcExpr.setVariable("x", x);
+        //     return funcExpr.eval();
+        // };
         //
     }
 
@@ -68,7 +78,7 @@ public class NeuralNetwork {
                 for (int weight = 0; weight < weights[layer][neuron].length; weight++) {
                     neuronSum += weights[layer][neuron][weight] * layerInput[weight];
                 }
-                layerOutput[neuron] = actFunction.run(neuronSum);
+                layerOutput[neuron] = actFunction.out(neuronSum);
 
             }
             outputs[layer] = layerOutput;
@@ -84,5 +94,6 @@ public class NeuralNetwork {
 
 
 interface ActFunction {
-    double run(double x);
+    double out(double x);
+    double der(double x);
 }
