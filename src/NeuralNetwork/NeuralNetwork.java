@@ -14,7 +14,8 @@ public class NeuralNetwork {
         //
         if (networkWeights.length > 0)
             this.inputSize = networkWeights[0][0].length;
-        //TODO Проверить передаваемый массив на валидность
+        //Проверяем передаваемый массив на валидность
+        checkWeightsArray(networkWeights);
         //присваиваем массив весов
         weights = networkWeights.clone();
         //обрабатываем и присваиваем функцию активации
@@ -47,6 +48,18 @@ public class NeuralNetwork {
         //     return funcExpr.eval();
         // };
         //
+    }
+
+    private void checkWeightsArray(double[][][] networkWeights) {
+        for (int i = 1; i < networkWeights.length; i++) {
+            for (double[] w : networkWeights[i]) {
+                //if (w.length != networkWeights[i - 1].length) throw new Exception("Invalid weights array"); //Так было бы по-правильному
+                //Можно сделать метод boolean чтобы он возвращал false после ^этой проверки
+                networkWeights[i - 1][w.length - 1].toString(); //Шаманизм
+                w[networkWeights[i - 1].length - 1] += 0;       //
+                //^Шаманская проверка массива на валидность чтобы не обрабатывать Exception. При невалидном выкинет "Out of bounds"
+            }
+        }
     }
 
     public NeuralNetwork(NetworkData data) {
