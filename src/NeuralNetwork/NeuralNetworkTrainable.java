@@ -73,13 +73,13 @@ public class NeuralNetworkTrainable extends NeuralNetwork {
 
         int percent = count / 100;
 
-
         for (int i = 0; i < count; i++) {
             //index = ( index + 1 ) % trainData.length;
             index = rand.nextInt(trainData.length);
             train(trainData[index][0], trainData[index][1], k);
-            if ( i % percent == 0 ) System.out.println(i / percent + "% complete.");
+            if (i % percent == 0) System.out.print((i / percent) + "% complete." + (char) 13);
         }
+        System.out.println();
 
 
         //TODO CheckData
