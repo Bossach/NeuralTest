@@ -1,3 +1,5 @@
+import Menus.Menu;
+import Menus.MenuManager;
 import NeuralNetwork.*;
 
 import java.io.*;
