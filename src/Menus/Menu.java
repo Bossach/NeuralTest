@@ -59,7 +59,7 @@ public class Menu {
 
     public static String getPrefix(int i) {
         if (i > 0) {
-            return "|".repeat(i);
+            return "┤".repeat(i);
         } else {
             return "";
         }
