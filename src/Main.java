@@ -8,6 +8,22 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
 
+        Menu men = new Menu("MAIN1");
+
+        men.newMenu("lal").newMenu("SubSubMenu");
+
+        Menu men2 = new Menu("MAIN2");
+        men2.newMenu("main2sub");
+        men.newMenu().newMenu("root");
+
+
+
+        System.out.println("------");
+
+        MenuManager.getFromName("root").printFamily();
+
+
+
     }
 
     public static void testEval() {

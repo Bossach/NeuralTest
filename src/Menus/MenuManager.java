@@ -34,9 +34,7 @@ public class MenuManager {
     }
 
     public static void printParents (Menu child) {
-        if(child != Menu.root) {
             child.printParents();
-        }
     }
 
     public static void printParents (String menuName) {
